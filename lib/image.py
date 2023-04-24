@@ -11,7 +11,13 @@ Box = Tuple[int, int, int, int]  # PIL format
 
 
 def open_image(image_fp: BufferedReader) -> Image:
-    return Image.open(image_fp)
+    img = Image.open(image_fp).convert('RGB')
+    with BytesIO() as io:
+        img.save(io, format='jpeg')
+        io.seek(0)
+        img = Image.open(io)
+        img.load()
+    return img
 
 
 class PolygonDrawer:

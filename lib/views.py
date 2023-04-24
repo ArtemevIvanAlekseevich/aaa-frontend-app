@@ -18,20 +18,22 @@ class IndexView(View):
             draw = PolygonDrawer(image)
             model = self.request.app["model"]
             words = []
-            for coords, word, accuracy in model.readtext(image):
+            for coords, word, confidence in model.readtext(image):
                 draw.highlight_word(coords, word)
                 cropped_img = draw.crop(coords)
                 cropped_img_b64 = image_to_img_src(cropped_img)
                 words.append(
                     {
                         "image": cropped_img_b64,
-                        "word": word,
-                        "accuracy": accuracy,
+                        "text": word,
+                        "confidence": confidence,
+                        "confidence_str": f"{confidence * 100:.2f}",
                     }
                 )
             image_b64 = image_to_img_src(draw.get_highlighted_image())
             ctx = {"image": image_b64, "words": words}
-            return render_template("index.html", self.request, ctx)
         except Exception as err:
-            ctx = {"error": str(err)}
-            return render_template("index.html", self.request, ctx)
+            err = repr(err)
+            ind = err.find("(")
+            ctx = {"error": err[:ind], "text_err": err[ind+2:-2]}
+        return render_template("index.html", self.request, ctx)
